@@ -3,7 +3,7 @@ import pandas as pd
 import math
 # nltk.download('reuters')
 from nltk.corpus import reuters
-
+import numpy as np
 
 
 def generateVocab(corpus):
@@ -93,6 +93,53 @@ def generateTfidf(vocab,corpus, bow_contagem, bow_ponderado):
             bow_tfidf[noticia][word] = a*b
     df_bow_tfidf = pd.DataFrame().from_records(bow_tfidf).fillna(0).T
     return df_bow_tfidf, bow_tfidf
+def cossineSimilarity(vetor1, vetor2):
+    prod_interno = 0
+
+    for elemento1, elemento2 in zip(vetor1,vetor2):
+        prod_interno += elemento1*elemento2
+
+    norma_vetor1 = 0
+    for x in vetor1:
+        norma_vetor1 += x * x
+    norma_vetor1 = norma_vetor1 ** 0.5
+
+    # norma_vetor1 = math.sqrt(sum([x**2 for x in vetor1]))
+
+    norma_vetor2 = 0
+    for x in vetor2:
+        norma_vetor2 += x * x
+    norma_vetor2 = norma_vetor2 ** 0.5
+
+    return prod_interno / (norma_vetor1 * norma_vetor2)
+def generateDfSim(df_bow_tfidf):
+
+    df_similaridades = pd.DataFrame([])
+    df_bow_tfidf.reset_index(inplace=True, drop=True)
+    for i in range(0, len(df_bow_tfidf)):
+        similaridades = []
+
+        # preenchendo a linha 0 de similaridade
+        vetor1 = df_bow_tfidf.iloc[i].values.flatten().tolist()
+        for j in range(0, len(df_bow_tfidf)):
+            vetor2 = df_bow_tfidf.iloc[j].values.flatten().tolist()
+            cos_sim = cossineSimilarity(vetor1, vetor2)
+            similaridades.append(cos_sim)
+
+        # a_row = pd.Series([1, 2])
+        # df = pd.DataFrame([[3, 4], [5, 6]]) # vai adicionar dps
+        #
+        # row_df = pd.DataFrame([a_row])
+        # df = pd.concat([row_df, df], ignore_index=True)
+
+        df_similaridade = pd.DataFrame([similaridades])
+        df_similaridades = pd.concat([df_similaridades, df_similaridade], ignore_index=True)
+
+    np.fill_diagonal(df_similaridades.values, 0)
+    return df_similaridades
+    pass
+
+
 
 def main():
     cats = reuters.categories()
@@ -112,10 +159,11 @@ def main():
 
 
     vocab = generateVocab(corpus)
-    df_bow_binario = generateBowBinario(corpus)
+    # df_bow_binario = generateBowBinario(corpus)
     df_bow_contagem, bow_contagem = generateBowContagem(corpus)
     df_bow_ponderado, bow_ponderado = generateBowPonderado(corpus)
     df_bow_tfidf, bow_tfidf = generateTfidf(vocab,corpus,bow_contagem, bow_ponderado)
+    df_similaridades = generateDfSim(df_bow_tfidf)
     print("\n")
 
 
