@@ -4,6 +4,9 @@ import math
 # nltk.download('reuters')
 from nltk.corpus import reuters
 import numpy as np
+import cProfile
+
+
 
 
 def generateVocab(corpus):
@@ -138,8 +141,32 @@ def generateDfSim(df_bow_tfidf):
     np.fill_diagonal(df_similaridades.values, 0)
     return df_similaridades
     pass
+def generateDfTop10(df_similaridades, df_reduced):
 
+    indices_noticias_mais_similares_top10 = df_similaridades.apply(lambda s: s.abs().nlargest(10).index.tolist(), axis=1)
+    df_top_10 = pd.DataFrame(0,index=np.arange(1), columns=np.arange(10))
+    # for indice_noticia_consulta in range(0, len(df_reduced)):
+    # para cada noticia de consulta
 
+    for indice_noticia_consulta, lista in enumerate(indices_noticias_mais_similares_top10):
+    # para cada lista contendo as top 10 noticias mais similares
+        # ['trade']
+        noticia_consulta_categorias = df_reduced.iloc[indice_noticia_consulta]['categories']
+        # [['ipi','earn'], ['bop'], ['tin']]
+        lista_tuplas_noticia_categoria = []
+        for indice_noticia_similar in lista:
+        #
+            tupla_noticia_categoria = (indice_noticia_similar, df_reduced.iloc[indice_noticia_similar]['categories'])
+            lista_tuplas_noticia_categoria.append(tupla_noticia_categoria)
+        ranking = 0
+        for tupla in lista_tuplas_noticia_categoria:
+            for categoria in noticia_consulta_categorias:
+                if categoria in tupla[1]:
+                    df_top_10[ranking] += 1
+                    break
+            ranking += 1
+
+    return df_top_10
 
 def main():
     cats = reuters.categories()
@@ -155,15 +182,19 @@ def main():
         text.append(reuters.raw(file))
 
     df = pd.DataFrame({'ids': fileids, 'categories': categories, 'text': text})
-    corpus = df['text'].tolist()[:100]
+
+    df_reduced = df.head(5000)
+    corpus = df_reduced['text']
 
 
-    vocab = generateVocab(corpus)
     # df_bow_binario = generateBowBinario(corpus)
+    vocab = generateVocab(corpus)
     df_bow_contagem, bow_contagem = generateBowContagem(corpus)
     df_bow_ponderado, bow_ponderado = generateBowPonderado(corpus)
     df_bow_tfidf, bow_tfidf = generateTfidf(vocab,corpus,bow_contagem, bow_ponderado)
     df_similaridades = generateDfSim(df_bow_tfidf)
+
+    df_top_10 = generateDfTop10(df_similaridades, df_reduced)
     print("\n")
 
 
@@ -171,4 +202,5 @@ def main():
 
 
 if __name__ == "__main__":
+    cProfile.run('main()')
     main()
