@@ -120,6 +120,7 @@ def generateDfSim(df_bow_tfidf):
     df_similaridades = pd.DataFrame([])
     df_bow_tfidf.reset_index(inplace=True, drop=True)
     for i in range(0, len(df_bow_tfidf)):
+        print(f"Similaridade da noticia {i}")
         similaridades = []
 
         # preenchendo a linha 0 de similaridade
@@ -183,7 +184,7 @@ def main():
 
     df = pd.DataFrame({'ids': fileids, 'categories': categories, 'text': text})
 
-    df_reduced = df.head(5000)
+    df_reduced = df.head(500)
     corpus = df_reduced['text']
 
 
@@ -203,4 +204,4 @@ def main():
 
 if __name__ == "__main__":
     cProfile.run('main()')
-    main()
+    # main()
