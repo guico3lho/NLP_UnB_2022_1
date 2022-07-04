@@ -5,22 +5,71 @@ import math
 from nltk.corpus import reuters
 import numpy as np
 import cProfile
+import re
+
+from nltk.stem import WordNetLemmatizer
+from nltk.stem.porter import *
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+nltk.download('stopwords')
 
 
+def preProcessing(texts):
+
+    corpus = []
+    for text in texts:
+        text = text.lower()
+        text_regexed = regexFiltering(text)
+        text_no_sw = removeStopWords(text_regexed)
+        text_stem_lem = LemAndStemm(text_no_sw)
+
+        corpus.append(text_stem_lem)
 
 
-def generateVocab(corpus):
     tokens = []
-    # corpus = df['text']
-    # sentence = noticia
     for noticia in corpus:
         # noticia = ASIAN EXPORTERS FEAR DAMAGE FROM
         for word in noticia.split():
-            tokens.append(word)
-    # A then a
 
-    vocab = sorted(set(tokens))
-    return vocab
+            tokens.append(word)
+
+    tokens = sorted(set(tokens))
+
+    vocab = tokens
+    return corpus, vocab
+
+def LemAndStemm(text):
+    lemmatizer = WordNetLemmatizer()
+    stemmatizer = PorterStemmer()
+
+    tokens = re.split(' ',text)
+
+    lemas = [lemmatizer.lemmatize(t) for t in tokens]
+    stemmas = [stemmatizer.stem(t) for t in lemas]
+    text_stem_lem = ' '.join(stemmas)
+    return text_stem_lem
+
+def regexFiltering(text):
+    # text_regexed = re.sub(r'','',text)
+    text_regexed = re.sub(r'&lt[^\s]+','', text)
+    text_regexed = re.sub(r'[^a-zA-Z ]+','', text_regexed)
+
+    return text_regexed
+
+def removeStopWords(text):
+    stop_list = nltk.corpus.stopwords.words('english')
+    tokens_no_sw = []
+    for word in text.split():
+        if word not in stop_list:
+            tokens_no_sw.append(word)
+
+    text_no_sw = ' '.join(tokens_no_sw)
+
+    return text_no_sw
+
+
+
+
 def generateBowBinario(corpus):
     # (i, noticia) = (0, ASIAN EXPORTERS FEAR DAMAGE FROM U.S.-JAPAN RIFT\n Mounting trade friction between the\n U.S. And Japa)
     bow_binario = {}
@@ -60,30 +109,26 @@ def generateBowPonderado(corpus):
             else:
                 bow_ponderado['noticia {}'.format(i)][word] = 1
 
-    # para cada dicionário noticia do dicionario bow_contagem
-    # for noticia in bow_contagem:
-    #     # para cada palavra do dicionário noticia
-    #     for word in noticia:
-    # for noticia in bow_ponderado:
     for noticia in bow_ponderado:
         for word in bow_ponderado[noticia]:
             bow_ponderado[noticia][word] /= N[noticia]
-    # bow_ponderado['noticia {}'.format(i)][word] = bow_ponderado['noticia {}'.format(i)][word]/N[i]
+
 
     df_bow_ponderado = pd.DataFrame().from_records(bow_ponderado).fillna(0).T.astype(float)
 
     return df_bow_ponderado, bow_ponderado
     print("\n")
 def generateTfidf(vocab,corpus, bow_contagem, bow_ponderado):
-    tf = {}
+    tf = {} # frequencia de termos em todo o corpus
     idf = {}
+    num = len(corpus)
     for word in vocab:
         tf[word] = 0
         for noticia in bow_contagem:
             if word in bow_contagem[noticia]:
                 tf[word] += 1
     for word in tf:
-        num = len(corpus)
+
         den = tf[word]
         idf[word] = math.log(num/den)
 
@@ -107,8 +152,6 @@ def cossineSimilarity(vetor1, vetor2):
         norma_vetor1 += x * x
     norma_vetor1 = norma_vetor1 ** 0.5
 
-    # norma_vetor1 = math.sqrt(sum([x**2 for x in vetor1]))
-
     norma_vetor2 = 0
     for x in vetor2:
         norma_vetor2 += x * x
@@ -130,11 +173,6 @@ def generateDfSim(df_bow_tfidf):
             cos_sim = cossineSimilarity(vetor1, vetor2)
             similaridades.append(cos_sim)
 
-        # a_row = pd.Series([1, 2])
-        # df = pd.DataFrame([[3, 4], [5, 6]]) # vai adicionar dps
-        #
-        # row_df = pd.DataFrame([a_row])
-        # df = pd.concat([row_df, df], ignore_index=True)
 
         df_similaridade = pd.DataFrame([similaridades])
         df_similaridades = pd.concat([df_similaridades, df_similaridade], ignore_index=True)
@@ -142,12 +180,11 @@ def generateDfSim(df_bow_tfidf):
     np.fill_diagonal(df_similaridades.values, 0)
     return df_similaridades
     pass
-def generateDfTop10(df_similaridades, df_reduced):
+def  generateDfTop10(df_similaridades, df_reduced):
 
     indices_noticias_mais_similares_top10 = df_similaridades.apply(lambda s: s.abs().nlargest(10).index.tolist(), axis=1)
-    df_top_10 = pd.DataFrame(0,index=np.arange(1), columns=np.arange(10))
-    # for indice_noticia_consulta in range(0, len(df_reduced)):
-    # para cada noticia de consulta
+    df_top_10 = pd.DataFrame(0,index=np.arange(1), columns=np.arange(1,11))
+
 
     for indice_noticia_consulta, lista in enumerate(indices_noticias_mais_similares_top10):
     # para cada lista contendo as top 10 noticias mais similares
@@ -159,7 +196,7 @@ def generateDfTop10(df_similaridades, df_reduced):
         #
             tupla_noticia_categoria = (indice_noticia_similar, df_reduced.iloc[indice_noticia_similar]['categories'])
             lista_tuplas_noticia_categoria.append(tupla_noticia_categoria)
-        ranking = 0
+        ranking = 1
         for tupla in lista_tuplas_noticia_categoria:
             for categoria in noticia_consulta_categorias:
                 if categoria in tupla[1]:
@@ -171,7 +208,6 @@ def generateDfTop10(df_similaridades, df_reduced):
 
 def main():
     cats = reuters.categories()
-    # print("Reuters has %d categories:\n%s" % (len(cats), cats))
 
     fileids = reuters.fileids()
 
@@ -184,18 +220,18 @@ def main():
 
     df = pd.DataFrame({'ids': fileids, 'categories': categories, 'text': text})
 
-    df_reduced = df.head(500)
-    corpus = df_reduced['text']
+    df_reduced = df.sample(100)
 
+    texts = df_reduced['text']
 
-    # df_bow_binario = generateBowBinario(corpus)
-    vocab = generateVocab(corpus)
+    corpus, vocab = preProcessing(texts)
     df_bow_contagem, bow_contagem = generateBowContagem(corpus)
     df_bow_ponderado, bow_ponderado = generateBowPonderado(corpus)
     df_bow_tfidf, bow_tfidf = generateTfidf(vocab,corpus,bow_contagem, bow_ponderado)
     df_similaridades = generateDfSim(df_bow_tfidf)
 
     df_top_10 = generateDfTop10(df_similaridades, df_reduced)
+    pd.Series(vocab).to_csv("vocabulario.csv")
     print("\n")
 
 
@@ -203,5 +239,5 @@ def main():
 
 
 if __name__ == "__main__":
-    cProfile.run('main()')
-    # main()
+    # cProfile.run('main()')
+    main()

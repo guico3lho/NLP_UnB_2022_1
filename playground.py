@@ -44,9 +44,7 @@ def stackoverflow():
             cos_sim = cosine_similarity(vetor1,vetor2)
     pass
 def main():
-    # cos_sim = cosine_similarity([1,1,1,1],[1,1,1,1])
-    stackoverflow()
-    print("end\n")
+
 
 
 
