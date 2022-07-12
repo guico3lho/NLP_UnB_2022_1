@@ -25,14 +25,17 @@ def learn_and():
     labels = [0,0,0,1]
     bias = 0
     net = bias
-    for atributo, peso in zip(X,pesos):
-        # for a in atributo:
 
-        net += atributo*peso
+
+
+    for entradas, peso,label in zip(X,pesos,labels):
+        # for a in atributo:
+        for entrada in entradas:
+            net += entrada*peso
 
         y = funcAtivacao(net,'degrau',0.5)
 
-        print(f'[{atributo[0]},{atributo[1]}] Output perceptron: {y} Label: {labels[j]}')
+        print(f'[{entradas[0]},{entradas[1]}] Output perceptron: {y} Label: {label}')
 
 
     # for x in X:
@@ -41,19 +44,19 @@ def learn_and():
     #         y = funcAtivacao()
     #         print
 
-def funcAtivacao(x, tipo,t):
+def funcAtivacao(net, tipo,threshold):
     if tipo == 'degrau':
-        if x >= t:
+        if net >= threshold:
             y = 1
         else:
             y = 0
     elif tipo == 'sinal':
-        if x >= 0:
+        if net >= 0:
             y = 1
         else:
             y = -1
     elif tipo == 'sinoidal':
-        y = 1/(1+math.exp(-x))
+        y = 1/(1+math.exp(-net))
     else:
         y = 'Tipo inválido'
     print("\n")
