@@ -2,40 +2,63 @@ import math
 import numpy as np
 
 def main():
-    atributos = [0.5,1.1,0.1,0.2,0.7]
 
-    # qtd pesos = qtd atributos
+
+    learn_and()
+    # and_vini()
+
+def update_weights():
     pesos = np.random.randn(5)
-    # pesos = [-1,-1,-1,-4,-2]
-    bias = 0
-    net = bias
-    for atributo, peso in zip(atributos,pesos):
-        net += atributo*peso
-
-    y = funcAtivacao(net, 'sinoidal',0)
-    print(y)
-
-    # learn_and()
-    and_vini()
-
+    t = 0
 
 def learn_and():
-    pesos = np.random.randn(5)
+    pesos = np.random.randn(2)
     X = [[0,0], [0,1], [1,0], [1,1]]
     labels = [0,0,0,1]
     bias = 0
+    d = 2
     net = bias
 
+    t = 0
+    E = 5
+    e = 0.25
+    learning_rate = 0.1
+    loss = 0
 # [ 0.41797655 -1.1972179  -0.81969236  0.6041066  -0.83425944]
+    while t < 10:
+        print(t)
+        for entradas, label in zip(X,labels):
+            # for a in atributo:
+            for entrada,peso in zip(entradas,pesos):
+                net += entrada*peso
 
-    for entradas, peso,label in zip(X,pesos,labels):
-        # for a in atributo:
-        for entrada in entradas:
-            net += entrada*peso
+            y = funcAtivacao(net,'degrau',0.5)
 
-        y = funcAtivacao(net,'degrau',0.5)
+            # print(f'[{entradas[0]},{entradas[1]}] Output perceptron: {y} Label: {label}')
 
-        print(f'[{entradas[0]},{entradas[1]}] Output perceptron: {y} Label: {label}')
+
+            if y != label:
+                loss += (y-label)**2
+                for i,peso in enumerate(pesos):
+                    delta = learning_rate*peso*entradas[i]*(label - y)
+                    pesos[i] = pesos[i] + delta
+        print("loss:", loss)
+        t += 1
+
+
+
+
+                # if y != label:
+                #     peso = 0.1*entrada*(label - y)
+
+
+
+
+
+
+
+
+
 
 
 def and_vini():
@@ -73,7 +96,7 @@ def funcAtivacao(net, tipo,threshold):
         y = 1/(1+math.exp(-net))
     else:
         y = 'Tipo inválido'
-    print("\n")
+
     return y
 
 if __name__ == "__main__":
