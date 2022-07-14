@@ -4,12 +4,96 @@ import numpy as np
 def main():
 
 
-    learn_and()
+    learn_and_vini()
     # and_vini()
 
-def update_weights():
-    pesos = np.random.randn(5)
+
+
+
+
+def learn_and_vini():
+    data_and = [[0, 0], [0, 1], [1, 0], [1, 1]]
+    labels = [0, 0, 0, 1]
+    d = 2
+
+    lr = 0.2
+    pesos = np.random.randn(2)
+    l = np.array(labels)
+    X = np.array(data_and)
     t = 0
+
+    while t < 15:
+
+        loss = 0
+
+        print(f'Epoch: {t}')
+
+        for i, x in enumerate(X):
+
+            net = 0
+            for j in range(0, d):
+                net += pesos[j] * x[j]
+
+            y = funcAtivacao(net, 'degrau', 0.4)
+
+            erro = (labels[i] - y) ** 2
+
+            loss += erro
+
+            if labels[i] != y:
+
+                for j in range(0, d):
+                    delta = lr * x[j] * (labels[i] - y)
+                    pesos[j] += delta
+        t += 1
+        print(f'Loss function: {loss}')
+
+
+
+
+
+
+
+
+
+
+def funcAtivacao(net, tipo,threshold):
+    if tipo == 'degrau':
+        if net >= threshold:
+            y = 1
+        else:
+            y = 0
+    elif tipo == 'sinal':
+        if net >= 0:
+            y = 1
+        else:
+            y = -1
+    elif tipo == 'sinoidal':
+        y = 1/(1+math.exp(-net))
+    else:
+        y = 'Tipo inválido'
+
+    return y
+
+
+def and_vini():
+    X = [[0, 0], [0, 1], [1, 0], [1, 1]]
+
+    labels = [0, 1, 1, 1]
+
+    weights = np.random.random(2) / 1000
+
+    bias = np.random.random() / 1000
+
+    for id, exemplo in enumerate(X):
+        input = np.array(exemplo)
+
+        net = np.dot(input, weights) + bias
+
+        y = funcAtivacao(net, "degrau", 0.5)
+
+        print("predicted: {}".format(y))
+        print("label: {}".format(labels[id]))
 
 def learn_and():
     pesos = np.random.randn(2)
@@ -50,54 +134,5 @@ def learn_and():
 
                 # if y != label:
                 #     peso = 0.1*entrada*(label - y)
-
-
-
-
-
-
-
-
-
-
-
-def and_vini():
-    X = [[0, 0], [0, 1], [1, 0], [1, 1]]
-
-    labels = [0, 1, 1, 1]
-
-    weights = np.random.random(2) / 1000
-
-    bias = np.random.random() / 1000
-
-    for id, exemplo in enumerate(X):
-        input = np.array(exemplo)
-
-        net = np.dot(input, weights) + bias
-
-        y = funcAtivacao(net, "degrau", 0.5)
-
-        print("predicted: {}".format(y))
-        print("label: {}".format(labels[id]))
-
-
-def funcAtivacao(net, tipo,threshold):
-    if tipo == 'degrau':
-        if net >= threshold:
-            y = 1
-        else:
-            y = 0
-    elif tipo == 'sinal':
-        if net >= 0:
-            y = 1
-        else:
-            y = -1
-    elif tipo == 'sinoidal':
-        y = 1/(1+math.exp(-net))
-    else:
-        y = 'Tipo inválido'
-
-    return y
-
 if __name__ == "__main__":
     main()
