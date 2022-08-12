@@ -1,7 +1,7 @@
 import nltk
 import pandas as pd
 import math
-# nltk.download('reuters')
+nltk.download('reuters')
 from nltk.corpus import reuters
 import numpy as np
 import cProfile
